@@ -28006,6 +28006,13 @@ function debug(message) {
 function error(message, properties = {}) {
     issueCommand('error', toCommandProperties(properties), message instanceof Error ? message.toString() : message);
 }
+/**
+ * Writes info to log with console.log.
+ * @param message info message
+ */
+function info(message) {
+    process.stdout.write(message + os.EOL);
+}
 
 /**
  * Waits for a number of milliseconds.
@@ -28019,6 +28026,68 @@ async function wait(milliseconds) {
             throw new Error('milliseconds is not a number');
         setTimeout(() => resolve('done!'), milliseconds);
     });
+}
+
+/**
+ * Stripe revenue fetching module for the PHU AI platform.
+ * Retrieves payment charges from the Stripe API.
+ */
+/**
+ * Fetches revenue data from the Stripe API.
+ *
+ * @param secretKey - The Stripe secret key used to authenticate API requests.
+ * @returns Resolves with aggregated revenue data including total revenue and
+ *   individual payments.
+ */
+async function fetchStripeRevenue(secretKey) {
+    const response = await fetch('https://api.stripe.com/v1/charges?limit=100', {
+        headers: {
+            Authorization: `Bearer ${secretKey}`
+        }
+    });
+    if (!response.ok) {
+        const body = await response.text().catch(() => '');
+        throw new Error(`Stripe API error: ${response.status} ${response.statusText}${body ? ` - ${body}` : ''}`);
+    }
+    const data = (await response.json());
+    const payments = data.data.map((charge) => ({
+        id: charge.id,
+        amount: charge.amount / 100,
+        currency: charge.currency.toUpperCase(),
+        created: charge.created,
+        customer: charge.customer
+    }));
+    const totalRevenue = payments.reduce((sum, p) => sum + p.amount, 0);
+    return { totalRevenue, payments };
+}
+
+/**
+ * Telegram alert utility for the PHU AI platform.
+ * Sends messages to a Telegram chat via the Bot API.
+ */
+/**
+ * Sends a message to a Telegram chat using the Bot API.
+ *
+ * @param botToken - The Telegram bot token used to authenticate the request.
+ * @param chatId - The target chat ID to send the message to.
+ * @param message - The message text to send (supports Markdown).
+ * @returns Resolves when the message has been sent successfully.
+ */
+async function sendTelegramAlert(botToken, chatId, message) {
+    const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            chat_id: chatId,
+            text: message,
+            parse_mode: 'Markdown'
+        })
+    });
+    if (!response.ok) {
+        const body = await response.text().catch(() => '');
+        throw new Error(`Telegram API error: ${response.status} ${response.statusText}${body ? ` - ${body}` : ''}`);
+    }
 }
 
 /**
@@ -28037,6 +28106,24 @@ async function run() {
         debug(new Date().toTimeString());
         // Set outputs for other workflow steps to use
         setOutput('time', new Date().toTimeString());
+        // Fetch Stripe revenue if a secret key is provided
+        const stripeSecretKey = getInput('stripe_secret_key');
+        if (stripeSecretKey) {
+            info('Fetching Stripe revenue data...');
+            const { totalRevenue, payments } = await fetchStripeRevenue(stripeSecretKey);
+            info(`Total Revenue: $${totalRevenue.toFixed(2)}`);
+            setOutput('total_revenue', totalRevenue.toFixed(2));
+            setOutput('payment_count', String(payments.length));
+        }
+        // Send a Telegram alert if credentials and message are provided
+        const botToken = getInput('telegram_bot_token');
+        const chatId = getInput('telegram_chat_id');
+        const alertMessage = getInput('telegram_alert_message');
+        if (botToken && chatId && alertMessage) {
+            info('Sending Telegram alert...');
+            await sendTelegramAlert(botToken, chatId, alertMessage);
+            info('Telegram alert sent.');
+        }
     }
     catch (error) {
         // Fail the workflow run if an error occurs
