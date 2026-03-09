@@ -57,8 +57,12 @@ jobs:
         id: test-action
         uses: ./
         with:
-          milliseconds: 2000
+          topic: 'Make Money With AI'
+          question: 'How do I use AI to earn money online?'
 
       - name: Print Output
         id: output
-        run: echo "${{ steps.test-action.outputs.time }}"
+        run: |
+          echo "Lesson: ${{ steps.test-action.outputs.lesson }}"
+          echo "Answer: ${{ steps.test-action.outputs.answer }}"
+          echo "Lesson count: ${{ steps.test-action.outputs.lesson_count }}"

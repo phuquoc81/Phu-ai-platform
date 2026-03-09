@@ -1,23 +1,38 @@
-name: The name of your action here
-description: Provide a description here
-author: Your name or organization here
-
+name: PHU AI Learning Module
+description: >
+  A GitHub Action that generates AI-powered lessons and step-by-step guidance
+  for using AI tools to work smarter and build income. Powered by phubers.blog.
+author: phuquoc81
 # Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
-  icon: heart
-  color: red
+  icon: book-open
+  color: blue
 
 # Define your inputs here.
 inputs:
-  milliseconds:
-    description: Your input description here
-    required: true
-    default: '1000'
+  topic:
+    description: >
+      The topic to generate a lesson for (e.g. "Make Money With AI", "Automate
+      Tasks With AI").
+    required: false
+    default: 'Make Money With AI'
+  question:
+    description: >
+      A question to ask the PHU AI Teacher. Defaults to the topic value when not
+      provided.
+    required: false
+    default: ''
 
 # Define your outputs here.
 outputs:
-  time:
-    description: Your output description here
+  lesson:
+    description: >
+      A JSON string containing the generated lesson object with title, steps,
+      and a money example.
+  answer:
+    description: The PHU AI Teacher's step-by-step response to the question.
+  lesson_count:
+    description: The total number of lessons available in the platform catalog.
 
 runs:
   using: node24

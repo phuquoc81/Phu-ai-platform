@@ -7,11 +7,9 @@
  */
 import { jest } from '@jest/globals'
 import * as core from '../__fixtures__/core.js'
-import { wait } from '../__fixtures__/wait.js'
 
 // Mocks should be declared before the module being tested is imported.
 jest.unstable_mockModule('@actions/core', () => core)
-jest.unstable_mockModule('../src/wait.js', () => ({ wait }))
 
 // The module being tested should be imported dynamically. This ensures that the
 // mocks are used in place of any actual dependencies.
@@ -19,44 +17,75 @@ const { run } = await import('../src/main.js')
 
 describe('main.ts', () => {
   beforeEach(() => {
-    // Set the action's inputs as return values from core.getInput().
-    core.getInput.mockImplementation(() => '500')
-
-    // Mock the wait function so that it does not actually wait.
-    wait.mockImplementation(() => Promise.resolve('done!'))
+    core.getInput.mockImplementation((name: string) => {
+      if (name === 'topic') return 'Make Money With AI'
+      if (name === 'question') return 'How do I use AI to earn money online?'
+      return ''
+    })
   })
 
   afterEach(() => {
     jest.resetAllMocks()
   })
 
-  it('Sets the time output', async () => {
+  it('Sets the lesson output as JSON', async () => {
     await run()
 
-    // Verify the time output was set.
-    expect(core.setOutput).toHaveBeenNthCalledWith(
-      1,
-      'time',
-      // Simple regex to match a time string in the format HH:MM:SS.
-      expect.stringMatching(/^\d{2}:\d{2}:\d{2}/)
+    const lessonCall = core.setOutput.mock.calls.find(
+      (call) => call[0] === 'lesson'
     )
+    expect(lessonCall).toBeDefined()
+
+    const lesson = JSON.parse(lessonCall![1] as string)
+    expect(lesson).toMatchObject({
+      title: 'Make Money With AI',
+      steps: expect.any(Array),
+      moneyExample: expect.any(String)
+    })
+    expect(lesson.steps.length).toBeGreaterThan(0)
   })
 
-  it('Sets a failed status', async () => {
-    // Clear the getInput mock and return an invalid value.
-    core.getInput.mockClear().mockReturnValueOnce('this is not a number')
+  it('Sets the answer output from the AI teacher', async () => {
+    await run()
 
-    // Clear the wait mock and return a rejected promise.
-    wait
-      .mockClear()
-      .mockRejectedValueOnce(new Error('milliseconds is not a number'))
+    const answerCall = core.setOutput.mock.calls.find(
+      (call) => call[0] === 'answer'
+    )
+    expect(answerCall).toBeDefined()
+    expect(answerCall![1]).toContain('PHU AI Teacher')
+    expect(answerCall![1]).toContain('How do I use AI to earn money online?')
+  })
+
+  it('Sets the lesson_count output', async () => {
+    await run()
+
+    const countCall = core.setOutput.mock.calls.find(
+      (call) => call[0] === 'lesson_count'
+    )
+    expect(countCall).toBeDefined()
+    expect(Number(countCall![1])).toBeGreaterThan(0)
+  })
+
+  it('Uses default topic when no inputs are provided', async () => {
+    core.getInput.mockImplementation(() => '')
 
     await run()
 
-    // Verify that the action was marked as failed.
-    expect(core.setFailed).toHaveBeenNthCalledWith(
-      1,
-      'milliseconds is not a number'
+    const lessonCall = core.setOutput.mock.calls.find(
+      (call) => call[0] === 'lesson'
     )
+    expect(lessonCall).toBeDefined()
+    const lesson = JSON.parse(lessonCall![1] as string)
+    expect(lesson.title).toBe('Make Money With AI')
+  })
+
+  it('Sets a failed status when an error is thrown', async () => {
+    core.getInput.mockImplementation(() => {
+      throw new Error('input error')
+    })
+
+    await run()
+
+    expect(core.setFailed).toHaveBeenCalledWith('input error')
   })
 })
