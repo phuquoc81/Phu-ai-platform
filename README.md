@@ -1,8 +1,8 @@
 # PHU AI Platform — Learning Module
 
-![CI](https://github.com/phuquoc81/Phu-ai-platform/actions/workflows/ci.yml/badge.svg)
-![Check dist/](https://github.com/phuquoc81/Phu-ai-platform/actions/workflows/check-dist.yml/badge.svg)
-<a href="https://github.com/phuquoc81/Phu-ai-platform/actions/workflows/linter.yml"><img src="https://github.com/phuquoc81/Phu-ai-platform/actions/workflows/linter.yml/badge.svg" alt="Lint Codebase"></a>
+[![CI](https://github.com/phuquoc81/Phu-ai-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/phuquoc81/Phu-ai-platform/actions/workflows/ci.yml)
+[![Check dist/](https://github.com/phuquoc81/Phu-ai-platform/actions/workflows/check-dist.yml/badge.svg)](https://github.com/phuquoc81/Phu-ai-platform/actions/workflows/check-dist.yml)
+[![Lint Codebase](https://github.com/phuquoc81/Phu-ai-platform/actions/workflows/linter.yml/badge.svg)](https://github.com/phuquoc81/Phu-ai-platform/actions/workflows/linter.yml)
 ![Coverage](./badges/coverage.svg)
 
 A GitHub Action that generates AI-powered lessons and step-by-step guidance for
