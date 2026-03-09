@@ -1,27 +1,36 @@
 import * as core from '@actions/core'
-import { wait } from './wait.js'
+import { buildLesson, getLessons } from './lessons.js'
+import { phuTeacher } from './phuAI.js'
 
 /**
- * The main function for the action.
+ * The main function for the PHU AI Learning Module action.
+ *
+ * Accepts an optional `topic` and `question` input, then outputs a structured
+ * lesson and an AI teacher response so downstream workflow steps can consume
+ * them.
  *
  * @returns Resolves when the action is complete.
  */
 export async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds')
+    const topic: string = core.getInput('topic') || 'Make Money With AI'
+    const question: string = core.getInput('question') || topic
 
-    // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-    core.debug(`Waiting ${ms} milliseconds ...`)
+    core.debug(`Generating lesson for topic: "${topic}"`)
+    core.debug(`Answering question: "${question}"`)
 
-    // Log the current timestamp, wait, then log the new timestamp
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
+    const lesson = buildLesson(topic)
+    const answer = phuTeacher(question)
+    const allLessons = getLessons()
 
-    // Set outputs for other workflow steps to use
-    core.setOutput('time', new Date().toTimeString())
+    core.info(`PHU AI Learning Module — platform ready`)
+    core.info(`Lesson: ${lesson.title}`)
+    core.info(`Total available lessons: ${allLessons.length}`)
+
+    core.setOutput('lesson', JSON.stringify(lesson))
+    core.setOutput('answer', answer)
+    core.setOutput('lesson_count', String(allLessons.length))
   } catch (error) {
-    // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)
   }
 }

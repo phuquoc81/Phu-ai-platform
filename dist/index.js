@@ -28006,40 +28006,143 @@ function debug(message) {
 function error(message, properties = {}) {
     issueCommand('error', toCommandProperties(properties), message instanceof Error ? message.toString() : message);
 }
-
 /**
- * Waits for a number of milliseconds.
- *
- * @param milliseconds The number of milliseconds to wait.
- * @returns Resolves with 'done!' after the wait is over.
+ * Writes info to log with console.log.
+ * @param message info message
  */
-async function wait(milliseconds) {
-    return new Promise((resolve) => {
-        if (isNaN(milliseconds))
-            throw new Error('milliseconds is not a number');
-        setTimeout(() => resolve('done!'), milliseconds);
-    });
+function info(message) {
+    process.stdout.write(message + os.EOL);
 }
 
 /**
- * The main function for the action.
+ * Lesson building logic for the PHU AI Learning Module.
+ *
+ * Provides structured lesson content for users learning how to use AI tools
+ * for productivity and income generation.
+ */
+/** The catalog of available lessons. */
+const LESSON_CATALOG = [
+    {
+        id: 1,
+        title: 'Start Using PHU AI',
+        steps: [
+            'Open PHU AI dashboard',
+            'Ask PHU AI a question',
+            'Generate ideas or code',
+            'Save the result',
+            'Use it for work or business'
+        ],
+        moneyExample: 'Use PHU AI to write content for clients and charge a fee'
+    },
+    {
+        id: 2,
+        title: 'Make Money With AI',
+        steps: [
+            'Use PHU AI to create content',
+            'Turn content into a digital product',
+            'Sell online on a marketplace',
+            'Automate marketing with AI',
+            'Scale your income'
+        ],
+        moneyExample: 'Create AI social media posts and sell marketing services to businesses'
+    },
+    {
+        id: 3,
+        title: 'Automate Tasks With AI',
+        steps: [
+            'Identify repetitive tasks in your workflow',
+            'Choose an AI tool for your work',
+            'Automate tasks with AI',
+            'Create digital products from the results',
+            'Sell online using AI marketing'
+        ],
+        moneyExample: 'Automate customer support with AI and offer the service to small businesses'
+    }
+];
+/**
+ * Returns all available lessons.
+ *
+ * @returns The full lesson catalog.
+ */
+function getLessons() {
+    return LESSON_CATALOG;
+}
+/** Generic money example used for custom-built lessons. */
+const DEFAULT_MONEY_EXAMPLE = 'Use AI to build a digital product or service and sell it online';
+/**
+ * Builds a custom lesson for the given topic.
+ *
+ * @param topic - The subject for the generated lesson.
+ * @returns A newly constructed lesson object.
+ */
+function buildLesson(topic) {
+    return {
+        id: 0,
+        title: topic,
+        steps: [
+            'Understand the AI tool used in this skill',
+            'Create an account on the platform',
+            'Use AI to automate work tasks',
+            'Turn the result into a digital product',
+            'Sell the product online'
+        ],
+        moneyExample: DEFAULT_MONEY_EXAMPLE
+    };
+}
+
+/**
+ * PHU AI Core — teacher logic for the PHU AI Learning Module.
+ *
+ * Generates step-by-step AI teaching responses that guide users through
+ * using AI tools for work and income generation.
+ */
+/**
+ * Generates a structured teaching response from the PHU AI teacher.
+ *
+ * @param question - The user's question or topic they want to learn about.
+ * @returns A formatted step-by-step teaching answer.
+ */
+function phuTeacher(question) {
+    return `Hello, I am PHU AI Teacher.
+
+Your question:
+${question}
+
+Step 1: Use AI to create a task.
+Step 2: Generate results with PHU AI.
+Step 3: Turn results into a digital service.
+Step 4: Sell online.
+Step 5: Automate the work.
+
+This is how PHU AI helps you build income.`;
+}
+
+/**
+ * The main function for the PHU AI Learning Module action.
+ *
+ * Accepts an optional `topic` and `question` input, then outputs a structured
+ * lesson and an AI teacher response so downstream workflow steps can consume
+ * them.
  *
  * @returns Resolves when the action is complete.
  */
 async function run() {
     try {
-        const ms = getInput('milliseconds');
-        // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-        debug(`Waiting ${ms} milliseconds ...`);
-        // Log the current timestamp, wait, then log the new timestamp
-        debug(new Date().toTimeString());
-        await wait(parseInt(ms, 10));
-        debug(new Date().toTimeString());
-        // Set outputs for other workflow steps to use
-        setOutput('time', new Date().toTimeString());
+        const topic = getInput('topic') || 'Make Money With AI';
+        const question = getInput('question') || topic;
+        debug(`Generating lesson for topic: "${topic}"`);
+        debug(`Answering question: "${question}"`);
+        const lesson = buildLesson(topic);
+        const answer = phuTeacher(question);
+        const allLessons = getLessons();
+        info(`PHU AI Learning Module — platform ready`);
+        info(`Lesson: ${lesson.title}`);
+        info(`Total available lessons: ${allLessons.length}`);
+        setOutput('lesson', JSON.stringify(lesson));
+        setOutput('answer', answer);
+        setOutput('lesson_count', String(allLessons.length));
     }
     catch (error) {
-        // Fail the workflow run if an error occurs
         if (error instanceof Error)
             setFailed(error.message);
     }
