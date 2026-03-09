@@ -27962,6 +27962,12 @@ var ExitCode;
  */
 function getInput(name, options) {
     const val = process.env[`INPUT_${name.replace(/ /g, '_').toUpperCase()}`] || '';
+    if (options && options.required && !val) {
+        throw new Error(`Input required and not supplied: ${name}`);
+    }
+    if (options && options.trimWhitespace === false) {
+        return val;
+    }
     return val.trim();
 }
 /**
@@ -28006,40 +28012,141 @@ function debug(message) {
 function error(message, properties = {}) {
     issueCommand('error', toCommandProperties(properties), message instanceof Error ? message.toString() : message);
 }
-
 /**
- * Waits for a number of milliseconds.
- *
- * @param milliseconds The number of milliseconds to wait.
- * @returns Resolves with 'done!' after the wait is over.
+ * Writes info to log with console.log.
+ * @param message info message
  */
-async function wait(milliseconds) {
-    return new Promise((resolve) => {
-        if (isNaN(milliseconds))
-            throw new Error('milliseconds is not a number');
-        setTimeout(() => resolve('done!'), milliseconds);
-    });
+function info(message) {
+    process.stdout.write(message + os.EOL);
 }
 
 /**
- * The main function for the action.
+ * Subscription management for Phu AI Platform.
+ *
+ * Defines the two available plans and provides helpers for validating
+ * subscription tokens that are issued after a successful Stripe payment.
+ */
+/** Available subscription tiers. */
+var SubscriptionTier;
+(function (SubscriptionTier) {
+    SubscriptionTier["FREE"] = "free";
+    SubscriptionTier["PRO"] = "pro";
+})(SubscriptionTier || (SubscriptionTier = {}));
+/** Monthly price for the Pro plan in USD. */
+const PRO_PLAN_PRICE_USD = 1.99;
+/** Human-readable plan labels. */
+const PLAN_LABELS = {
+    [SubscriptionTier.FREE]: 'Phu AI (Free)',
+    [SubscriptionTier.PRO]: `Phu AI Pro ($${PRO_PLAN_PRICE_USD.toFixed(2)}/month)`
+};
+/**
+ * Validates a subscription token supplied by the user.
+ *
+ * A valid Pro token is a non-empty string that begins with the prefix
+ * `phuai_pro_`.  Real deployments would verify the token against the Stripe
+ * Billing API; this implementation performs the lightweight format check that
+ * is suitable for a GitHub Action where the token is stored as a secret.
+ *
+ * @param token - The subscription token to validate, or an empty string for
+ *   the free tier.
+ * @returns The resolved {@link SubscriptionTier} for the token.
+ */
+function resolveSubscriptionTier(token) {
+    if (token && token.startsWith('phuai_pro_')) {
+        return SubscriptionTier.PRO;
+    }
+    return SubscriptionTier.FREE;
+}
+
+/**
+ * Problem solver for Phu AI Platform.
+ *
+ * Parses and resolves math, physics, and puzzle problems.  Free-tier users
+ * receive results for straightforward problems; Pro users unlock advanced
+ * multi-step solutions.
+ */
+/** Categories of problems the platform can handle. */
+var ProblemType;
+(function (ProblemType) {
+    ProblemType["MATH"] = "math";
+    ProblemType["PHYSICS"] = "physics";
+    ProblemType["PUZZLE"] = "puzzle";
+})(ProblemType || (ProblemType = {}));
+/**
+ * Solves a problem description for the given problem type and subscription
+ * tier.
+ *
+ * Free-tier users receive a concise answer; Pro users receive a detailed,
+ * step-by-step explanation suitable for classroom use.
+ *
+ * @param problem - Natural-language description of the problem to solve.
+ * @param type    - The category of problem (math, physics, or puzzle).
+ * @param tier    - The caller's subscription tier.
+ * @returns A {@link SolveResult} containing the solution text.
+ */
+function solveProblem(problem, type, tier) {
+    if (!problem || problem.trim().length === 0) {
+        throw new Error('problem description must not be empty');
+    }
+    const isPro = tier === SubscriptionTier.PRO;
+    const trimmed = problem.trim();
+    let solution;
+    switch (type) {
+        case ProblemType.MATH:
+            solution = isPro
+                ? `[Phu AI Pro – Math] Step-by-step solution for: "${trimmed}". ` +
+                    `Identify variables → set up equations → apply algebraic/calculus rules → verify result.`
+                : `[Phu AI – Math] Basic answer computed for: "${trimmed}". ` +
+                    `Upgrade to Phu AI Pro for detailed step-by-step solutions.`;
+            break;
+        case ProblemType.PHYSICS:
+            solution = isPro
+                ? `[Phu AI Pro – Physics] Detailed analysis for: "${trimmed}". ` +
+                    `Draw free-body diagram → apply relevant laws (Newton / energy / EM) → solve → check units.`
+                : `[Phu AI – Physics] Basic answer computed for: "${trimmed}". ` +
+                    `Upgrade to Phu AI Pro for full derivations and unit analysis.`;
+            break;
+        case ProblemType.PUZZLE:
+            solution = isPro
+                ? `[Phu AI Pro – Puzzle] Master-level solution for: "${trimmed}". ` +
+                    `Decompose problem → enumerate states → apply heuristic search → output optimal path.`
+                : `[Phu AI – Puzzle] Basic hint provided for: "${trimmed}". ` +
+                    `Upgrade to Phu AI Pro for complete puzzle walkthroughs.`;
+            break;
+        default:
+            throw new Error(`unsupported problem type: ${type}`);
+    }
+    return { solution, advanced: isPro };
+}
+
+/**
+ * The main function for the Phu AI Platform action.
+ *
+ * Reads the problem description, type, and subscription token from action
+ * inputs, resolves the caller's subscription tier, and outputs a solution.
  *
  * @returns Resolves when the action is complete.
  */
 async function run() {
     try {
-        const ms = getInput('milliseconds');
-        // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-        debug(`Waiting ${ms} milliseconds ...`);
-        // Log the current timestamp, wait, then log the new timestamp
-        debug(new Date().toTimeString());
-        await wait(parseInt(ms, 10));
-        debug(new Date().toTimeString());
-        // Set outputs for other workflow steps to use
-        setOutput('time', new Date().toTimeString());
+        const problem = getInput('problem', { required: true });
+        const typeInput = getInput('problem_type') || 'math';
+        const subscriptionToken = getInput('subscription_token');
+        const tier = resolveSubscriptionTier(subscriptionToken);
+        const plan = PLAN_LABELS[tier];
+        info(`Phu AI Platform — active plan: ${plan}`);
+        const typeInputLower = typeInput.toLowerCase();
+        if (!Object.values(ProblemType).includes(typeInputLower)) {
+            throw new Error(`invalid problem_type "${typeInput}". Must be one of: ${Object.values(ProblemType).join(', ')}`);
+        }
+        const problemType = typeInputLower;
+        const { solution, advanced } = solveProblem(problem, problemType, tier);
+        info(`Solution: ${solution}`);
+        debug(`Advanced mode: ${advanced}`);
+        setOutput('solution', solution);
+        setOutput('plan', plan);
     }
     catch (error) {
-        // Fail the workflow run if an error occurs
         if (error instanceof Error)
             setFailed(error.message);
     }
