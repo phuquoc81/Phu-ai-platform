@@ -31,6 +31,22 @@ follow the below instructions:
 > details on how to use this file, see
 > [About code owners](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners).
 
+## GitHub Codespaces
+
+This repository includes a ready-to-use
+[`devcontainer`](./.devcontainer/devcontainer.json) configuration so you can
+start contributing from a GitHub Codespace without any local setup.
+
+1. Open the repository in GitHub.
+1. Select **Code** > **Codespaces** > **Create codespace on main**.
+1. Wait for the post-create setup to finish installing dependencies with
+   `npm install`.
+1. Use the integrated terminal to run the normal development commands, such as
+   `npm test` or `npm run bundle`.
+
+The Codespaces image is pinned to Node.js 24 to match the repository's
+`.node-version` and `package.json` engine requirements.
+
 ## Initial Setup
 
 After you've cloned the repository to your local machine or codespace, you'll
@@ -39,7 +55,7 @@ need to perform some initial setup steps before you can develop your action.
 > [!NOTE]
 >
 > You'll need to have a reasonably modern version of
-> [Node.js](https://nodejs.org) handy (20.x or later should work!). If you are
+> [Node.js](https://nodejs.org) handy (24.x or later should work!). If you are
 > using a version manager like [`nodenv`](https://github.com/nodenv/nodenv) or
 > [`fnm`](https://github.com/Schniz/fnm), this template has a `.node-version`
 > file at the root of the repository that can be used to automatically switch to
