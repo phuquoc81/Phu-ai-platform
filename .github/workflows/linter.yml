@@ -1,8 +1,5 @@
-# This workflow will lint the entire codebase using the
-# `super-linter/super-linter` action.
-#
-# For more information, see the super-linter repository:
-#     https://github.com/super-linter/super-linter
+# This workflow lints the codebase using the repository's native
+# formatting and linting commands.
 name: Lint Codebase
 
 on:
@@ -15,8 +12,6 @@ on:
 
 permissions:
   contents: read
-  packages: read
-  statuses: write
 
 jobs:
   lint:
@@ -41,20 +36,10 @@ jobs:
         id: install
         run: npm ci
 
+      - name: Check Format
+        id: format-check
+        run: npm run format:check
+
       - name: Lint Codebase
-        id: super-linter
-        uses: super-linter/super-linter/slim@v8
-        env:
-          CHECKOV_FILE_NAME: .checkov.yml
-          DEFAULT_BRANCH: main
-          FILTER_REGEX_EXCLUDE: dist/**/*
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          LINTER_RULES_PATH: .
-          VALIDATE_ALL_CODEBASE: true
-          VALIDATE_BIOME_FORMAT: false
-          VALIDATE_BIOME_LINT: false
-          VALIDATE_GITHUB_ACTIONS_ZIZMOR: false
-          VALIDATE_JAVASCRIPT_ES: false
-          VALIDATE_JSCPD: false
-          VALIDATE_TYPESCRIPT_ES: false
-          VALIDATE_JSON: false
+        id: lint
+        run: npm run lint
