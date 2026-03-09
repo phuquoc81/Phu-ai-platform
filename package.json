@@ -1,7 +1,7 @@
 {
-  "name": "typescript-action",
-  "description": "GitHub Actions TypeScript template",
-  "version": "0.0.0",
+  "name": "phu-ai-platform",
+  "description": "GitHub Action: Phu AI Platform — help teachers and students solve math, physics, and puzzles. Upgrade to Phu AI Pro ($1.99/month via Stripe) for advanced solutions.",
+  "version": "1.0.0",
   "author": "",
   "type": "module",
   "private": true,

@@ -1,27 +1,46 @@
 import * as core from '@actions/core'
-import { wait } from './wait.js'
+import {
+  resolveSubscriptionTier,
+  PLAN_LABELS,
+  SubscriptionTier
+} from './subscription.js'
+import { solveProblem, ProblemType } from './solver.js'
 
 /**
- * The main function for the action.
+ * The main function for the Phu AI Platform action.
+ *
+ * Reads the problem description, type, and subscription token from action
+ * inputs, resolves the caller's subscription tier, and outputs a solution.
  *
  * @returns Resolves when the action is complete.
  */
 export async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds')
+    const problem: string = core.getInput('problem', { required: true })
+    const typeInput: string = core.getInput('problem_type') || 'math'
+    const subscriptionToken: string = core.getInput('subscription_token')
 
-    // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-    core.debug(`Waiting ${ms} milliseconds ...`)
+    const tier: SubscriptionTier = resolveSubscriptionTier(subscriptionToken)
+    const plan: string = PLAN_LABELS[tier]
 
-    // Log the current timestamp, wait, then log the new timestamp
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
+    core.info(`Phu AI Platform — active plan: ${plan}`)
 
-    // Set outputs for other workflow steps to use
-    core.setOutput('time', new Date().toTimeString())
+    const typeInputLower = typeInput.toLowerCase()
+    if (!Object.values(ProblemType).includes(typeInputLower as ProblemType)) {
+      throw new Error(
+        `invalid problem_type "${typeInput}". Must be one of: ${Object.values(ProblemType).join(', ')}`
+      )
+    }
+    const problemType = typeInputLower as ProblemType
+
+    const { solution, advanced } = solveProblem(problem, problemType, tier)
+
+    core.info(`Solution: ${solution}`)
+    core.debug(`Advanced mode: ${advanced}`)
+
+    core.setOutput('solution', solution)
+    core.setOutput('plan', plan)
   } catch (error) {
-    // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)
   }
 }

@@ -1,23 +1,42 @@
-name: The name of your action here
-description: Provide a description here
-author: Your name or organization here
-
-# Add your action's branding here. This will appear on the GitHub Marketplace.
+name: Phu AI Platform
+description: >
+  Help teachers and students solve complex math, physics, and puzzle problems
+  with Phu AI. Upgrade to Phu AI Pro ($1.99/month via Stripe) for advanced
+  step-by-step solutions.
+author: phuquoc81
 branding:
-  icon: heart
-  color: red
+  icon: cpu
+  color: blue
 
 # Define your inputs here.
 inputs:
-  milliseconds:
-    description: Your input description here
+  problem:
+    description: >
+      Natural-language description of the problem to solve (math, physics, or
+      puzzle).
     required: true
-    default: '1000'
+  problem_type:
+    description: >
+      Category of the problem. Must be one of: math, physics, puzzle. Defaults
+      to math.
+    required: false
+    default: math
+  subscription_token:
+    description: >
+      Phu AI Pro subscription token issued after a successful Stripe payment
+      ($1.99/month). Leave empty to use the free tier.
+    required: false
+    default: ''
 
 # Define your outputs here.
 outputs:
-  time:
-    description: Your output description here
+  solution:
+    description: >
+      The solution produced by Phu AI for the given problem.
+  plan:
+    description: >
+      The active subscription plan (e.g. "Phu AI (Free)" or "Phu AI Pro
+      ($1.99/month)").
 
 runs:
   using: node24
