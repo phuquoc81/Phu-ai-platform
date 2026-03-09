@@ -1,7 +1,8 @@
-name: The name of your action here
-description: Provide a description here
-author: Your name or organization here
-
+name: PHU AI Platform Action
+description: >-
+  GitHub Action for the PHU AI platform — fetches Stripe revenue data and sends
+  Telegram alert notifications.
+author: phuquoc81
 # Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
   icon: heart
@@ -10,14 +11,46 @@ branding:
 # Define your inputs here.
 inputs:
   milliseconds:
-    description: Your input description here
+    description: Number of milliseconds to wait before completing the action.
     required: true
     default: '1000'
+  stripe_secret_key:
+    description: >-
+      Stripe secret key used to fetch revenue data. When provided, the action
+      fetches charge data from the Stripe API and exposes revenue outputs.
+    required: false
+    default: ''
+  telegram_bot_token:
+    description: >-
+      Telegram bot token used to send alert messages. Required together with
+      telegram_chat_id and telegram_alert_message to send an alert.
+    required: false
+    default: ''
+  telegram_chat_id:
+    description: >-
+      Telegram chat ID that will receive the alert message. Required together
+      with telegram_bot_token and telegram_alert_message to send an alert.
+    required: false
+    default: ''
+  telegram_alert_message:
+    description: >-
+      The message text to send via Telegram (supports Markdown). Required
+      together with telegram_bot_token and telegram_chat_id to send an alert.
+    required: false
+    default: ''
 
 # Define your outputs here.
 outputs:
   time:
-    description: Your output description here
+    description: The time at which the action completed.
+  total_revenue:
+    description: >-
+      Total revenue (in dollars) fetched from Stripe, formatted to two decimal
+      places. Only set when stripe_secret_key is provided.
+  payment_count:
+    description: >-
+      Number of payments returned by the Stripe API. Only set when
+      stripe_secret_key is provided.
 
 runs:
   using: node24
