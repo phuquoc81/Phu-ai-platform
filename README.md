@@ -2,7 +2,7 @@
 
 <a href="https://github.com/phuquoc81/Phu-ai-platform/actions/workflows/ci.yml"><img src="https://github.com/phuquoc81/Phu-ai-platform/actions/workflows/ci.yml/badge.svg"></a>
 [![Check dist/](https://github.com/phuquoc81/Phu-ai-platform/actions/workflows/check-dist.yml/badge.svg)](https://github.com/phuquoc81/Phu-ai-platform/actions/workflows/check-dist.yml)
-[![Lint Codebase](https://github.com/phuquoc81/Phu-ai-platform/actions/workflows/linter.yml/badge.svg)](https://github.com/phuquoc81/Phu-ai-platform/actions/workflows/linter.yml)
+<a href="https://github.com/phuquoc81/Phu-ai-platform/actions/workflows/linter.yml"><img src="https://github.com/phuquoc81/Phu-ai-platform/actions/workflows/linter.yml/badge.svg"></a>
 ![Coverage](./badges/coverage.svg)
 
 A GitHub Action that generates AI-powered lessons and step-by-step guidance for
